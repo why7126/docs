@@ -1,0 +1,256 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "文本生成型应用 API",
+    "description": "文本生成应用无会话支持，适合用于翻译/文章写作/总结 AI 等等。",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{api_base_url}",
+      "description": "API 的基础 URL。请将 {api_base_url} 替换为您的应用提供的实际 API 基础 URL。",
+      "variables": {
+        "api_base_url": {
+          "default": "https://api.tokenops.ai/v1",
+          "description": "实际的 API 基础 URL"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "summary": "文本生成",
+        "description": "POST https://api.tokenops.ai/v1/chat/completions",
+        "operationId": "generateText",
+        "tags": [
+          "文本生成"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "要使用的模型名称"
+                  },
+                  "messages": {
+                    "type": "array",
+                    "description": "消息列表",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "system",
+                            "user",
+                            "assistant"
+                          ],
+                          "description": "消息角色，`system` 为系统消息，`user` 为用户消息，`assistant` 为助手消息。"
+                        },
+                        "content": {
+                          "type": "string",
+                          "description": "消息内容。",
+                          "example": "你好，世界！"
+                        }
+                      }
+                    }
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "最大生成 token 数"
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 2.0,
+                    "description": "采样温度",
+                    "default": 1.0
+                  },
+                  "top_p": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 1.0,
+                    "description": "核采样概率",
+                    "default": 1.0
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "采样时的 top-k 值"
+                  },
+                  "frequency_penalty": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": -2.0,
+                    "maximum": 2.0,
+                    "description": "频率惩罚",
+                    "default": 0.0
+                  },
+                  "presence_penalty": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": -2.0,
+                    "maximum": 2.0,
+                    "description": "出现惩罚",
+                    "default": 0.0
+                  },
+                  "repetition_penalty": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0.0,
+                    "maximum": 2.0,
+                    "description": "重复惩罚",
+                    "default": 1.0
+                  },
+                  "response_format": {
+                    "type": "object",
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "json_object"
+                        ],
+                        "description": "消息角色，`system` 为系统消息，`user` 为用户消息，`assistant` 为助手消息。"
+                      }
+                    }
+                  },
+                  "min_p": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "最小生成 token 数",
+                    "default": 0
+                  },
+                  "top_a": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "top-a 采样",
+                    "default": 0
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，默认 0。",
+                    "default": 0
+                  },
+                  "logit_bias": {
+                    "type": "object",
+                    "description": "Logit 偏置，键为 token ID，值为偏置值。",
+                    "additionalProperties": {
+                      "type": "integer"
+                    }
+                  },
+                  "logprobs": {
+                    "type": "boolean",
+                    "description": "返回的 logprobs 数量，默认 false。",
+                    "default": false
+                  },
+                  "top_logprobs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20,
+                    "description": "返回的 top logprobs 数量，范围 0 到 20"
+                  },
+                  "structured_outputs": {
+                    "type": "boolean",
+                    "description": "是否启用结构化输出，默认 false。",
+                    "default": false
+                  },
+                  "stop": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "停止符列表，生成到任意一个停止符时停止。"
+                  },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "name",
+                        "description"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "function"
+                          ],
+                          "description": "工具类型，目前仅支持 `function`。"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "工具名称。"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "工具描述。"
+                        }
+                      }
+                    },
+                    "description": "可用的工具列表。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "prompt"
+                ]
+              },
+              "example": {
+                "summary": "生成文本示例",
+                "value": {
+                  "model": "gemini-2.5-pro",
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "请帮我写一篇关于人工智能的文章。"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "文本生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "生成的文本"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
