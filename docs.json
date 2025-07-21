@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "TokenOPS文档",
+  "name": "TokenOPS.AI文档",
   "description": "TokenOPS.AI的官方文档，提供了关于TokenOPS.AI的使用指南、API参考、隐私政策和更新公告。",
   "colors": {
     "primary": "#3B82F6",
@@ -37,7 +37,9 @@
             "groups": [
               {
                 "group": "文本生成",
-                "openapi": "zh-hans/openapi.json"
+                "pages": [
+                  "api-reference/endpoint/chatcompletions"
+                ]
               }
             ]
           },
@@ -60,10 +62,11 @@
     ]
   },
   "logo": {
-    "light": "/tokenops.svg",
-    "dark": "/logo-dark.svg",
+    "light": "/tokenopsai.svg",
+    "dark": "/tokenopsai.svg",
     "href": "https://www.tokenops.ai"
   },
+  "favicon": "/favicon.ico",
   "navbar": {
     "primary": {
       "type": "button",

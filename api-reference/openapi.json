@@ -1,0 +1,623 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI Plant Store",
+    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tokenops.ai/v1"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "description": "创建文本对话请求",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "chat completion response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API-Key不可用或无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error403"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API-Key 鉴权。所有 API 请求都应在 `Authorization` HTTP Header 中包含您的 API-Key，格式为 `Bearer {API_KEY}`"
+      }
+    },
+    "schemas": {
+      "ChatCompletionRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "请求的模型id，如gemini-2.5-flash",
+            "example": "gemini-2.5-flash"
+          },
+          "messages": {
+            "type": "array",
+            "description": "消息列表",
+            "items": {
+              "type": "object",
+              "required": [
+                "role",
+                "content"
+              ],
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "system",
+                    "user",
+                    "assistant"
+                  ],
+                  "description": "消息角色，`system` 为系统消息，`user` 为用户消息，`assistant` 为AI消息。",
+                  "example": "user"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "消息内容。",
+                  "example": "Hello！"
+                }
+              }
+            }
+          },
+          "stream": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "是否开启流式响应",
+            "default": null
+          },
+          "stream_options": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "流式处理响应选项，仅在设置 `stream` 为 `true` 时有效。",
+            "properties": {
+              "include_usage": {
+                "type": "boolean",
+                "description": "模型流式输出时，是否在输出结束前输出本次请求的 token 用量信息",
+                "default": false
+              }
+            }
+          },
+          "max_tokens": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "模型回答最大长度（单位 token），取值范围各个模型不同。\n输入 token 和输出 token 的总长度还受模型的上下文长度限制。"
+          },
+          "temperature": {
+            "oneOf": [
+              {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "采样温度。\n控制生成文本时对每个候选词的概率分布进行平滑的程度。当取值为0时，模型仅考虑对数概率最大的一个token。较高的值（如0.8）会使输出更加随机，而较低的值（如0.2）会使输出更加集中确定。\n通常建议仅调整temperature或top_p其中之一，不建议两者都修改。",
+            "default": 1
+          },
+          "top_p": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1.0,
+            "description": "核采样概率阀值。\n模型会考虑概率质量在top_p内的token结果。当取值为0时模型仅考虑对数概率最大的一个token。0.1意味着只考虑概率质量最高的前10%的token，取值越大生成的随机性越高，取值越低生成的确定性越高。\n通常建议仅调整temperature或top_p其中之一，不建议两者都修改。",
+            "default": 1.0
+          },
+          "frequency_penalty": {
+            "oneOf": [
+              {
+                "type": "number",
+                "format": "float",
+                "minimum": -2.0,
+                "maximum": 2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "频率惩罚系数。\n如果值为正，会根据新 token 在文本中的出现频率对其进行惩罚，从而降低模型逐字重复的可能性。",
+            "default": 0.0
+          },
+          "presence_penalty": {
+            "oneOf": [
+              {
+                "type": "number",
+                "format": "float",
+                "minimum": -2.0,
+                "maximum": 2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "存在惩罚系数。\n如果值为正，会根据新 token 到目前为止是否出现在文本中对其进行惩罚，从而增加模型谈论新主题的可能性。",
+            "default": 0.0
+          },
+          "top_logprobs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "description": "指定每个输出 token 位置最有可能返回的 token 数量，每个 token 都有关联的对数概率。\n仅当 logprobs为true 时可以设置 top_logprobs 参数。",
+            "default": 0
+          },
+          "logit_bias": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "调整指定 token 在模型输出内容中出现的概率，使模型生成的内容更加符合特定的偏好。\nlogit_bias 字段接受一个 map 值，其中每个键为词表中的 token ID（使用 tokenization 接口获取），每个值为该 token 的偏差值，取值范围为 [-100, 100]。",
+            "default": null,
+            "example": {
+              "1234": 100
+            }
+          },
+          "logprobs": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "是否返回输出 tokens 的对数概率。",
+            "default": false
+          },
+          "stop": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "模型遇到 stop 字段所指定的字符串时将停止继续生成，这个词语本身不会输出。最多支持 4 个字符串。\n深度思考能力模型不支持该字段。",
+            "example": [
+              "你好",
+              "再见"
+            ]
+          },
+          "response_format": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "json_object"
+                ],
+                "description": "消息角色，`system` 为系统消息，`user` 为用户消息，`assistant` 为助手消息。"
+              }
+            },
+            "description": "指定模型必须输出的格式。\n目前支持 `text` 和 `json_object` 两种格式。\n- `text`：返回纯文本格式的响应。\n- `json_object`：返回 JSON 对象格式的响应，适用于需要结构化数据的场景。",
+            "example": {
+              "type": "text"
+            }
+          },
+          "seed": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "随机种子。\n如果设置了种子，模型的输出将是确定性的，即相同的输入和种子将始终产生相同的输出。\n如果未设置种子，模型的输出将是非确定性的，即相同的输入可能会产生不同的输出。",
+            "default": null
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "function"
+                  ],
+                  "description": "工具类型，目前仅支持 `function`。"
+                },
+                "function": {
+                  "type": "object",
+                  "description": "模型返回中可包含待调用的工具。",
+                  "required": [
+                    "name"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "工具名称，模型返回中可包含待调用的工具名称。",
+                      "example": "get_weather"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "工具描述，模型返回中可包含待调用的工具描述。",
+                      "example": "获取指定城市的天气信息"
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "description": "工具参数，模型返回中可包含待调用的工具参数。",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "object"
+                            },
+                            {
+                              "type": "array"
+                            }
+                          ],
+                          "description": "参数类型",
+                          "example": "object"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "参数说明"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tool_choice": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "none"
+                ]
+              },
+              {
+                "type": "object",
+                "required": [
+                  "function",
+                  "type"
+                ],
+                "properties": {
+                  "function": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "工具名称，模型返回中可包含待调用的工具名称。"
+                      }
+                    }
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "function"
+                    ]
+                  }
+                }
+              }
+            ],
+            "description": "工具选择策略。\n- `auto`：模型会自动选择合适的工具进行调用。\n- `none`：不使用任何工具。",
+            "default": "auto"
+          }
+        },
+        "required": [
+          "model",
+          "messages"
+        ]
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "请求的唯一标识符。",
+            "example": "8096df8781e547f38cc2c24ed0de4a28"
+          },
+          "object": {
+            "type": "string",
+            "description": "对象类型，通常为 `chat.completion`。",
+            "example": "chat.completion"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "请求创建的时间戳（Unix时间戳）",
+            "example": 1741570283
+          },
+          "model": {
+            "type": "string",
+            "description": "使用的模型名称。",
+            "example": "gemini-2.5-flash"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatCompletionChoice"
+            },
+            "description": "生成的文本选项列表。"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage",
+            "description": "本次请求的 token 使用情况。"
+          }
+        }
+      },
+      "ChatCompletionChoice": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32",
+            "description": "选项的索引，从0开始。",
+            "example": 0
+          },
+          "message": {
+            "type": "object",
+            "required": [
+              "role",
+              "content"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "assistant"
+                ],
+                "description": "消息角色，`assistant` 为助手消息",
+                "example": "assistant"
+              },
+              "content": {
+                "type": "string",
+                "description": "生成的文本内容",
+                "example": "你好！"
+              },
+              "reasoning_content": {
+                "type": "string",
+                "description": "模型在生成文本时的推理过程内容",
+                "example": ""
+              }
+            }
+          },
+          "finish_reason": {
+            "type": "string",
+            "enum": [
+              "stop",
+              "length",
+              null
+            ],
+            "description": "`stop` 表示模型遇到 stop 字段所指定的字符串时停止继续生成，`length` 表示模型达到最大长度时停止生成，null表示未指定结束原因。"
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "format": "int32",
+            "description": "输入消息的 token 数量",
+            "example": 1117
+          },
+          "completion_tokens": {
+            "type": "integer",
+            "format": "int32",
+            "description": "生成的文本的 token 数量",
+            "example": 46
+          },
+          "total_tokens": {
+            "type": "integer",
+            "format": "int32",
+            "description": "本次请求的总 token 数量（输入 + 输出）",
+            "example": 1163
+          },
+          "prompt_tokens_details": {
+            "type": "object",
+            "description": "输入消息的 token 详细信息",
+            "required": [
+              "audio_tokens",
+              "cached_tokens"
+            ],
+            "properties": {
+              "audio_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "输入音频token 数量",
+                "example": 0
+              },
+              "cached_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "缓存命中的token数量",
+                "example": 0
+              }
+            }
+          },
+          "completion_tokens_details": {
+            "type": "object",
+            "description": "生成文本的 token 详细信息",
+            "required": [
+              "audio_tokens",
+              "reasoning_tokens"
+            ],
+            "properties": {
+              "audio_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "输出音频token 数量",
+                "example": 0
+              },
+              "reasoning_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "输出推理过程token 数量",
+                "example": 0
+              }
+            }
+          }
+        }
+      },
+      "Error403": {
+        "required": [
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "details",
+              "trace_id"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "错误代码",
+                "example": "403"
+              },
+              "message": {
+                "type": "string",
+                "description": "错误消息",
+                "example": "API-Key不可用或无效",
+              },
+              "details": {
+                "type": "array",
+                "description": "错误详情",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误详情代码",
+                      "example": "403"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误详情消息",
+                      "example": "validate api key fail"
+                    }
+                  }
+                }
+              },
+              "trace_id": {
+                "type": "string",
+                "description": "错误追踪ID，用于支持人员定位问题",
+                "example": "91997305b5e741e29a60f7925f1dfdac"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
